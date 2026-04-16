@@ -6,21 +6,36 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    // ===== GŁÓWNE ELEMENTY INTERFEJSU =====
+    LinearLayout menu;
+    LinearLayout gra;
+    GridLayout plansza;
 
-    LinearLayout menu;        // ekran startowy
-    LinearLayout gra;         // ekran faktycznej gry
-    GridLayout plansza;       // szachownica
+    int wybranyWiersz = -1;
+    int wybranaKolumna = -1;
+
+    SzachyLogika logika;
+
+    String[][] figury = {
+            {"♜","♞","♝","♛","♚","♝","♞","♜"},
+            {"♟","♟","♟","♟","♟","♟","♟","♟"},
+            {"","","","","","","",""},
+            {"","","","","","","",""},
+            {"","","","","","","",""},
+            {"","","","","","","",""},
+            {"♙","♙","♙","♙","♙","♙","♙","♙"},
+            {"♖","♘","♗","♕","♔","♗","♘","♖"}
+    };
 
     @Override
-    protected void onCreate(Bundle zapisanyStan) {
-        super.onCreate(zapisanyStan);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         menu = findViewById(R.id.menuLayout);
@@ -28,78 +43,87 @@ public class MainActivity extends AppCompatActivity {
         plansza = findViewById(R.id.chessBoard);
 
         Button przyciskGraj = findViewById(R.id.btnPlay);
-        przyciskGraj.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                startGry(); // przejście z menu do gry
-            }
-        });
+        przyciskGraj.setOnClickListener(v -> startGry());
     }
 
-    // ==== START ====
     private void startGry() {
-
-        // Ukrywamy menu
         menu.setVisibility(View.GONE);
-
-        // Pokazujemy ekran gry
         gra.setVisibility(View.VISIBLE);
 
-        // Budujemy szachownicę
+        logika = new SzachyLogika(figury);
         zbudujPlansze();
     }
 
-    // ===== TWORZENIE SZACHOWNICY =====
     private void zbudujPlansze() {
 
-        // tworzenie 8 wierszy
-        for (int wiersz = 0; wiersz < 8; wiersz++) {
+        plansza.removeAllViews();
 
-            // tworzenie 8 kolumn
-            for (int kolumna = 0; kolumna < 8; kolumna++) {
+        for (int w = 0; w < 8; w++) {
+            for (int k = 0; k < 8; k++) {
 
-                // Tworzymy pole
-                View pole = new View(this);
+                TextView pole = new TextView(this);
 
-                // ===== KOLORY SZACHOWNICY =====
-                // jeśli suma wiersza i kolumny jest parzysta → jasne pole
-                if ((wiersz + kolumna) % 2 == 0)
-                    pole.setBackgroundColor(Color.parseColor("#EEEED2"));
-                else
-                    pole.setBackgroundColor(Color.parseColor("#769656"));
+                pole.setBackgroundColor(((w + k) % 2 == 0)
+                        ? Color.parseColor("#EEEED2")
+                        : Color.parseColor("#769656"));
 
-                // ===== PARAMETRY UKŁADU =====
-                GridLayout.LayoutParams parametry = new GridLayout.LayoutParams();
+                pole.setText(figury[w][k]);
+                pole.setTextSize(28);
+                pole.setGravity(android.view.Gravity.CENTER);
+                pole.setTextColor(Color.BLACK);
 
-                // szerokość i wysokość (0 + weight = równe kwadraty)
-                parametry.width = 0;
-                parametry.height = 0;
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0;
+                params.height = 0;
+                params.rowSpec = GridLayout.spec(w, 1f);
+                params.columnSpec = GridLayout.spec(k, 1f);
 
-                // gdzie ma się znaleźć pole w siatce
-                parametry.rowSpec = GridLayout.spec(wiersz, 1f);
-                parametry.columnSpec = GridLayout.spec(kolumna, 1f);
+                pole.setLayoutParams(params);
 
-                // przypisujemy parametry do pola
-                pole.setLayoutParams(parametry);
+                final int ww = w;
+                final int kk = k;
 
-                // zapisujemy współrzędne
-                final int w = wiersz;
-                final int k = kolumna;
+                pole.setOnClickListener(v -> {
 
-                // ==== KLIKNIĘCIE POLA ====
-                pole.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+                    if (wybranyWiersz == -1) {
 
-                        // pokazuje które pole kliknięto
-                        Toast.makeText(MainActivity.this,
-                                "Kliknięto pole: " + w + "," + k,
-                                Toast.LENGTH_SHORT).show();
+                        if (!figury[ww][kk].equals("")) {
+                            wybranyWiersz = ww;
+                            wybranaKolumna = kk;
+
+                            Toast.makeText(this,
+                                    "Wybrano: " + figury[ww][kk],
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                    } else {
+
+                        if (logika.czyRuchDozwolony(
+                                wybranyWiersz,
+                                wybranaKolumna,
+                                ww,
+                                kk)) {
+
+                            figury[ww][kk] = figury[wybranyWiersz][wybranaKolumna];
+                            figury[wybranyWiersz][wybranaKolumna] = "";
+
+                            Toast.makeText(this,
+                                    "Ruch wykonany",
+                                    Toast.LENGTH_SHORT).show();
+
+                        } else {
+                            Toast.makeText(this,
+                                    "Nielegalny ruch",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        wybranyWiersz = -1;
+                        wybranaKolumna = -1;
+
+                        zbudujPlansze();
                     }
                 });
 
-                // dodajemy pole do planszy
                 plansza.addView(pole);
             }
         }
