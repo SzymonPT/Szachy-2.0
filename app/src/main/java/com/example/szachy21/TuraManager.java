@@ -2,22 +2,38 @@ package com.example.szachy21;
 
 public class TuraManager {
 
+    // ta zmienna jest JEDYNYM źródłem informacji o turze
     // true = białe, false = czarne
+    // cały system gry opiera się tylko na tym jednym booleanie
     private boolean biale = true;
 
-    // zmiana tury
+    // ================= ZMIANA STANU =================
+    // ta metoda NIE sprawdza niczego
+    // tylko przełącza stan true/false
     public void zmienTure() {
+
+        // operator ! odwraca wartość logiczną
+        // true → false
+        // false → true
         biale = !biale;
     }
 
-    // kto ma teraz ruch
+    // ================= ODCZYT STANU =================
+    // UI i logika gry pytają tę metodę:
+    // „kto teraz ma ruch?”
     public boolean czyBialeTeraz() {
+
+        // zwraca aktualny stan bez modyfikacji
         return biale;
     }
 
-    // ================= NAJWAŻNIEJSZA METODA =================
-    // sprawdza czy figura jest biała
+    // ================= IDENTYFIKACJA FIGUR =================
+    // ta metoda NIE sprawdza planszy
+    // tylko analizuje pojedynczy String (symbol figury)
     public boolean czyBiala(String figura) {
+
+        // porównujemy symbol tekstowy (Unicode chess pieces)
+        // jeśli pasuje do zestawu → figura biała
         return figura.equals("♙") ||
                 figura.equals("♖") ||
                 figura.equals("♘") ||
@@ -26,8 +42,14 @@ public class TuraManager {
                 figura.equals("♔");
     }
 
-    // (opcjonalnie) tekst tury do debugowania
+    // ================= DEBUG / INFO =================
+    // ta metoda nie wpływa na grę
+    // tylko zwraca tekst do Toast/logów
     public String napisTury() {
+
+        // operator ternary:
+        // jeśli biale == true → "Ruch białych"
+        // jeśli false → "Ruch czarnych"
         return biale ? "Ruch białych" : "Ruch czarnych";
     }
 }

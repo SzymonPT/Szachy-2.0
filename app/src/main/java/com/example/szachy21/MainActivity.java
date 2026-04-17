@@ -13,45 +13,47 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    // ===== UI =====
-    LinearLayout menu;     // ekran menu startowego
+    // UI w Androidzie to drzewa widoków (View hierarchy)
+    // tutaj trzymamy referencje do 3 głównych elementów ekranu
+    LinearLayout menu;     // ekran startowy
     LinearLayout gra;      // ekran gry
-    GridLayout plansza;    // szachownica 8x8
+    GridLayout plansza;    // siatka 8x8 (szachownica)
 
-    // ===== WYBÓR POLA =====
-    // przechowuje pierwszy klik (skąd ruszamy)
+    // te zmienne przechowują STAN kliknięcia
+    // Android nie pamięta "wyboru", więc robimy to ręcznie
     int wybranyWiersz = -1;
     int wybranaKolumna = -1;
 
-    // ===== LOGIKA GRY =====
-    SzachyLogika logika;   // sprawdzanie ruchów i szacha/mata
-    TuraManager tura;      // kontrola czyje są ruchy (białe/czarne)
+    // obiekty logiki gry (oddzielone od UI)
+    SzachyLogika logika;
+    TuraManager tura;
 
-    // ===== PLANSZA SZACHOWA =====
+    // TABLICA STANU GRY
+    // to jest „źródło prawdy” — UI tylko to wyświetla
     String[][] figury = {
-            {"♜","♞","♝","♛","♚","♝","♞","♜"}, // czarne figury
-            {"♟","♟","♟","♟","♟","♟","♟","♟"}, // czarne piony
+            {"♜","♞","♝","♛","♚","♝","♞","♜"},
+            {"♟","♟","♟","♟","♟","♟","♟","♟"},
             {"","","","","","","",""},
             {"","","","","","","",""},
             {"","","","","","","",""},
             {"","","","","","","",""},
-            {"♙","♙","♙","♙","♙","♙","♙","♙"}, // białe piony
-            {"♖","♘","♗","♕","♔","♗","♘","♖"}  // białe figury
+            {"♙","♙","♙","♙","♙","♙","♙","♙"},
+            {"♖","♘","♗","♕","♔","♗","♘","♖"}
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // wczytanie layoutu XML
+        // ładowanie XML → tworzy wszystkie View w pamięci
         setContentView(R.layout.activity_main);
 
-        // podpięcie widoków z XML
+        // findViewById łączy XML z Javą (binding ręczny)
         menu = findViewById(R.id.menuLayout);
         gra = findViewById(R.id.gameLayout);
         plansza = findViewById(R.id.chessBoard);
 
-        // przycisk start gry
+        // kliknięcie start = zmiana ekranu + start logiki
         Button btn = findViewById(R.id.btnPlay);
         btn.setOnClickListener(v -> startGry());
     }
@@ -59,48 +61,52 @@ public class MainActivity extends AppCompatActivity {
     // ================= START GRY =================
     private void startGry() {
 
-        // ukryj menu
+        // Android NIE usuwa widoków — tylko zmienia ich widoczność
         menu.setVisibility(View.GONE);
-
-        // pokaż planszę
         gra.setVisibility(View.VISIBLE);
 
-        // tworzenie logiki gry
+        // tworzymy logikę i przekazujemy REFERENCJĘ do tablicy
+        // czyli logika i UI pracują na tych samych danych
         logika = new SzachyLogika(figury);
 
-        // ustawienie tury (domyślnie białe)
+        // start tury (domyślnie białe)
         tura = new TuraManager();
 
-        // rysowanie planszy
+        // render pierwszej klatki planszy
         zbudujPlansze();
     }
 
-    // ================= RYSOWANIE SZACHOWNICY =================
+    // ================= RENDER SZACHOWNICY =================
     private void zbudujPlansze() {
 
-        // czyścimy starą planszę
+        // kasujemy wszystkie stare TextView
+        // (Android nie "odświeża automatycznie" siatki)
         plansza.removeAllViews();
 
-        // przechodzimy po wszystkich polach 8x8
+        // 2 pętle = przejście po 8x8
         for (int w = 0; w < 8; w++) {
             for (int k = 0; k < 8; k++) {
 
-                // tworzymy pojedyncze pole
+                // każde pole to osobny obiekt UI
                 TextView pole = new TextView(this);
 
-                // kolor pola (szachownica)
+                // kolorowanie szachownicy (checker pattern)
                 pole.setBackgroundColor(((w + k) % 2 == 0)
                         ? Color.parseColor("#EEEED2")
                         : Color.parseColor("#769656"));
 
-                // ustawienie figury na polu
+                // tekst = aktualna zawartość tablicy figury
                 pole.setText(figury[w][k]);
+
                 pole.setTextSize(28);
                 pole.setGravity(android.view.Gravity.CENTER);
+
+                // ważne: usuwa przesunięcia fontu emoji
                 pole.setIncludeFontPadding(false);
+
                 pole.setTextColor(Color.BLACK);
 
-                // rozciąganie pola w GridLayout (równe kafelki)
+                // GridLayout wymaga wag 1f żeby kafelki były równe
                 GridLayout.LayoutParams p = new GridLayout.LayoutParams();
                 p.width = 0;
                 p.height = 0;
@@ -109,43 +115,41 @@ public class MainActivity extends AppCompatActivity {
 
                 pole.setLayoutParams(p);
 
-                // zapis współrzędnych klikniętego pola
+                // kopiujemy indeksy, bo Java lambda wymaga final
                 final int ww = w;
                 final int kk = k;
 
                 // ================= KLIK NA POLE =================
                 pole.setOnClickListener(v -> {
 
-                    // ===== 1. WYBÓR FIGURY =====
+                    // ==================================================
+                    // FAZA 1: wybór figury
+                    // ==================================================
                     if (wybranyWiersz == -1) {
 
-                        // jeśli pole jest puste → nic nie rób
+                        // nie można kliknąć pustego pola
                         if (figury[ww][kk].equals("")) return;
 
-                        boolean biale = tura.czyBialeTeraz(); // kto ma ruch teraz
+                        // sprawdzamy kto ma ruch (logika tury)
+                        boolean biale = tura.czyBialeTeraz();
                         String figura = figury[ww][kk];
 
-                        // sprawdzenie czy gracz kliknął swoją figurę
-                        if (biale && !tura.czyBiala(figura)) {
-                            Toast.makeText(this, "Nie twoja tura", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
+                        // blokada: nie możesz kliknąć figury przeciwnika
+                        if (biale && !tura.czyBiala(figura)) return;
+                        if (!biale && tura.czyBiala(figura)) return;
 
-                        if (!biale && tura.czyBiala(figura)) {
-                            Toast.makeText(this, "Nie twoja tura", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-
-                        // zapamiętanie wybranej figury
+                        // zapamiętujemy start ruchu
                         wybranyWiersz = ww;
                         wybranaKolumna = kk;
                         return;
                     }
 
-                    // ===== 2. WYKONANIE RUCHU =====
+                    // ==================================================
+                    // FAZA 2: próba ruchu
+                    // ==================================================
                     boolean biale = tura.czyBialeTeraz();
 
-                    // sprawdzanie czy ruch jest legalny
+                    // pytamy logikę: czy ten ruch jest legalny
                     boolean ruch = logika.czyRuchDozwolony(
                             wybranyWiersz,
                             wybranaKolumna,
@@ -156,11 +160,11 @@ public class MainActivity extends AppCompatActivity {
 
                     if (ruch) {
 
-                        // wykonanie ruchu na planszy
+                        // zapisujemy ruch w tablicy (MODEL)
                         figury[ww][kk] = figury[wybranyWiersz][wybranaKolumna];
                         figury[wybranyWiersz][wybranaKolumna] = "";
 
-                        // odświeżenie logiki (ważne!)
+                        // odtwarzamy logikę (bo zmienił się stan planszy)
                         logika = new SzachyLogika(figury);
 
                         // zmiana tury
@@ -168,30 +172,29 @@ public class MainActivity extends AppCompatActivity {
 
                         boolean nowaTuraBiale = tura.czyBialeTeraz();
 
-                        // ===== SZACH =====
+                        // sprawdzanie szacha po ruchu
                         if (logika.czySzach(nowaTuraBiale)) {
                             Toast.makeText(this, "SZACH!", Toast.LENGTH_SHORT).show();
                         }
 
-                        // ===== MAT =====
+                        // sprawdzanie mata
                         if (logika.czyMat(nowaTuraBiale)) {
                             Toast.makeText(this, "MAT! KONIEC GRY", Toast.LENGTH_LONG).show();
                         }
 
                     } else {
-                        // nielegalny ruch
                         Toast.makeText(this, "Nielegalny ruch", Toast.LENGTH_SHORT).show();
                     }
 
-                    // reset wyboru figury
+                    // reset wyboru (żeby następny klik był od nowa)
                     wybranyWiersz = -1;
                     wybranaKolumna = -1;
 
-                    // przerysowanie planszy
+                    // pełny redraw UI (Android nie aktualizuje automatycznie TextView w GridLayout)
                     zbudujPlansze();
                 });
 
-                // dodanie pola do planszy
+                // dodajemy pole do siatki
                 plansza.addView(pole);
             }
         }
