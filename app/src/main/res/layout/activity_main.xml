@@ -44,6 +44,7 @@
             android:gravity="center"
             android:textSize="18sp"/>
 
+        <!-- CAŁA PLANSZA Z OZNACZENIAMI -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -51,12 +52,54 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <GridLayout
-                android:id="@+id/chessBoard"
-                android:layout_width="320dp"
-                android:layout_height="320dp"
-                android:rowCount="8"
-                android:columnCount="8"/>
+            <!-- GÓRNE LITERY A–H -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <TextView style="@style/label" android:text="A"/>
+                <TextView style="@style/label" android:text="B"/>
+                <TextView style="@style/label" android:text="C"/>
+                <TextView style="@style/label" android:text="D"/>
+                <TextView style="@style/label" android:text="E"/>
+                <TextView style="@style/label" android:text="F"/>
+                <TextView style="@style/label" android:text="G"/>
+                <TextView style="@style/label" android:text="H"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- LEWE NUMERY 8–1 -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginRight="6dp">
+
+                    <TextView style="@style/label" android:text="8"/>
+                    <TextView style="@style/label" android:text="7"/>
+                    <TextView style="@style/label" android:text="6"/>
+                    <TextView style="@style/label" android:text="5"/>
+                    <TextView style="@style/label" android:text="4"/>
+                    <TextView style="@style/label" android:text="3"/>
+                    <TextView style="@style/label" android:text="2"/>
+                    <TextView style="@style/label" android:text="1"/>
+                </LinearLayout>
+
+                <!-- SZACHOWNICA -->
+                <GridLayout
+                    android:id="@+id/chessBoard"
+                    android:layout_width="320dp"
+                    android:layout_height="320dp"
+                    android:rowCount="8"
+                    android:columnCount="8"/>
+            </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>

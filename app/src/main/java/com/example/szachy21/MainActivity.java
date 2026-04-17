@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     int wybranaKolumna = -1;
 
     SzachyLogika logika;
+    TuraManager tura;
 
     String[][] figury = {
             {"♜","♞","♝","♛","♚","♝","♞","♜"},
@@ -42,15 +43,18 @@ public class MainActivity extends AppCompatActivity {
         gra = findViewById(R.id.gameLayout);
         plansza = findViewById(R.id.chessBoard);
 
-        Button przyciskGraj = findViewById(R.id.btnPlay);
-        przyciskGraj.setOnClickListener(v -> startGry());
+        Button btn = findViewById(R.id.btnPlay);
+        btn.setOnClickListener(v -> startGry());
     }
 
     private void startGry() {
+
         menu.setVisibility(View.GONE);
         gra.setVisibility(View.VISIBLE);
 
         logika = new SzachyLogika(figury);
+        tura = new TuraManager();
+
         zbudujPlansze();
     }
 
@@ -72,13 +76,13 @@ public class MainActivity extends AppCompatActivity {
                 pole.setGravity(android.view.Gravity.CENTER);
                 pole.setTextColor(Color.BLACK);
 
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-                params.width = 0;
-                params.height = 0;
-                params.rowSpec = GridLayout.spec(w, 1f);
-                params.columnSpec = GridLayout.spec(k, 1f);
+                GridLayout.LayoutParams p = new GridLayout.LayoutParams();
+                p.width = 40;
+                p.height = 40;
+                p.rowSpec = GridLayout.spec(w, 1f);
+                p.columnSpec = GridLayout.spec(k, 1f);
 
-                pole.setLayoutParams(params);
+                pole.setLayoutParams(p);
 
                 final int ww = w;
                 final int kk = k;
@@ -87,41 +91,44 @@ public class MainActivity extends AppCompatActivity {
 
                     if (wybranyWiersz == -1) {
 
-                        if (!figury[ww][kk].equals("")) {
-                            wybranyWiersz = ww;
-                            wybranaKolumna = kk;
+                        if (figury[ww][kk].equals("")) return;
 
-                            Toast.makeText(this,
-                                    "Wybrano: " + figury[ww][kk],
-                                    Toast.LENGTH_SHORT).show();
+                        wybranyWiersz = ww;
+                        wybranaKolumna = kk;
+
+                        return;
+                    }
+
+                    boolean biale = tura.czyBialeTeraz();
+
+                    if (logika.czyRuchDozwolony(
+                            wybranyWiersz,
+                            wybranaKolumna,
+                            ww,
+                            kk,
+                            biale)) {
+
+                        figury[ww][kk] = figury[wybranyWiersz][wybranaKolumna];
+                        figury[wybranyWiersz][wybranaKolumna] = "";
+
+                        tura.zmienTure();
+
+                        if (logika.czySzach(!biale)) {
+                            Toast.makeText(this, "SZACH!", Toast.LENGTH_SHORT).show();
+                        }
+
+                        if (logika.czyMat(!biale)) {
+                            Toast.makeText(this, "MAT! KONIEC GRY", Toast.LENGTH_LONG).show();
                         }
 
                     } else {
-
-                        if (logika.czyRuchDozwolony(
-                                wybranyWiersz,
-                                wybranaKolumna,
-                                ww,
-                                kk)) {
-
-                            figury[ww][kk] = figury[wybranyWiersz][wybranaKolumna];
-                            figury[wybranyWiersz][wybranaKolumna] = "";
-
-                            Toast.makeText(this,
-                                    "Ruch wykonany",
-                                    Toast.LENGTH_SHORT).show();
-
-                        } else {
-                            Toast.makeText(this,
-                                    "Nielegalny ruch",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-
-                        wybranyWiersz = -1;
-                        wybranaKolumna = -1;
-
-                        zbudujPlansze();
+                        Toast.makeText(this, "Nielegalny ruch", Toast.LENGTH_SHORT).show();
                     }
+
+                    wybranyWiersz = -1;
+                    wybranaKolumna = -1;
+
+                    zbudujPlansze();
                 });
 
                 plansza.addView(pole);
