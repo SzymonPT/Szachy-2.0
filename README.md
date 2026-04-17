@@ -1,11 +1,9 @@
-Szachy Android – Projekt
+#Szachy Android – Projekt
 Opis aplikacji
 
 Jest to prosta aplikacja szachowa na Androida napisana w Javie. Gra umożliwia rozgrywkę dwóch graczy na jednym urządzeniu z podstawową logiką ruchów, turami oraz wykrywaniem szacha i mata.
 
-Technologie
-
-W projekcie wykorzystano:
+#W projekcie wykorzystano:
 
 Java (Android SDK)
 Android Studio
