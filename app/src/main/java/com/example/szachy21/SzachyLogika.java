@@ -8,7 +8,7 @@ public class SzachyLogika {
         this.figury = figury;
     }
 
-    // ================= RUCH =================
+    // ================= GŁÓWNA LOGIKA RUCHU =================
     public boolean czyRuchDozwolony(int ws, int ks, int wc, int kc, boolean bialeTeraz) {
 
         String figura = figury[ws][ks];
@@ -16,10 +16,11 @@ public class SzachyLogika {
 
         if (figura.equals("")) return false;
 
-        // 🔥 TURA (twarda blokada)
+        // tura
         if (bialeTeraz && !czyBiala(figura)) return false;
         if (!bialeTeraz && czyBiala(figura)) return false;
 
+        // nie można bić swoich
         if (!cel.equals("") && czyTenSamKolor(figura, cel)) return false;
 
         switch (figura) {
@@ -67,7 +68,6 @@ public class SzachyLogika {
             for (int k = 0; k < 8; k++) {
 
                 String figura = figury[w][k];
-
                 if (figura.equals("")) continue;
 
                 if (bialeTeraz && czyBiala(figura)) continue;
@@ -85,15 +85,17 @@ public class SzachyLogika {
     // ================= MAT =================
     public boolean czyMat(boolean bialeTeraz) {
 
+        // jeśli nie ma szacha → nie ma mata
         if (!czySzach(bialeTeraz)) return false;
 
+        // sprawdź wszystkie możliwe ruchy
         for (int ws = 0; ws < 8; ws++) {
             for (int ks = 0; ks < 8; ks++) {
 
                 String figura = figury[ws][ks];
-
                 if (figura.equals("")) continue;
 
+                // filtr koloru
                 if (bialeTeraz && !czyBiala(figura)) continue;
                 if (!bialeTeraz && czyBiala(figura)) continue;
 
@@ -101,7 +103,7 @@ public class SzachyLogika {
                     for (int kc = 0; kc < 8; kc++) {
 
                         if (czyRuchDozwolony(ws, ks, wc, kc, bialeTeraz)) {
-                            return false;
+                            return false; // jest ruch → nie mat
                         }
                     }
                 }
@@ -111,61 +113,46 @@ public class SzachyLogika {
         return true;
     }
 
-    // ================= POMOCNICZE =================
-    private boolean czyRuchBezTury(int ws, int ks, int wc, int kc) {
+    // ================= PION BIAŁY =================
+    private boolean pionBialy(int ws, int ks, int wc, int kc) {
 
-        String figura = figury[ws][ks];
+        if (ks == kc &&
+                wc == ws - 1 &&
+                figury[wc][kc].equals("")) return true;
 
-        switch (figura) {
+        if (Math.abs(kc - ks) == 1 &&
+                wc == ws - 1 &&
+                !figury[wc][kc].equals("") &&
+                !czyBiala(figury[wc][kc])) return true;
 
-            case "♟": return pionCzarny(ws, ks, wc, kc);
-            case "♙": return pionBialy(ws, ks, wc, kc);
-
-            case "♜":
-            case "♖": return wieza(ws, ks, wc, kc);
-
-            case "♝":
-            case "♗": return goniec(ws, ks, wc, kc);
-
-            case "♛":
-            case "♕": return hetman(ws, ks, wc, kc);
-
-            case "♞":
-            case "♘": return skoczek(ws, ks, wc, kc);
-
-            case "♚":
-            case "♔": return krol(ws, ks, wc, kc);
-        }
+        if (ws == 6 &&
+                ks == kc &&
+                wc == ws - 2 &&
+                figury[ws - 1][ks].equals("") &&
+                figury[wc][kc].equals("")) return true;
 
         return false;
     }
 
-    private boolean czyBiala(String f) {
-        return f.equals("♙") || f.equals("♖") || f.equals("♘") ||
-                f.equals("♗") || f.equals("♕") || f.equals("♔");
-    }
-
-    private boolean czyTenSamKolor(String a, String b) {
-        return czyBiala(a) == czyBiala(b);
-    }
-
-    // ================= PIONY =================
-    private boolean pionBialy(int ws, int ks, int wc, int kc) {
-        return ks == kc &&
-                wc == ws - 1 &&
-                figury[wc][kc].equals("") ||
-                (ks == kc && ws == 6 && wc == ws - 2 &&
-                        figury[ws - 1][ks].equals("") &&
-                        figury[wc][kc].equals(""));
-    }
-
+    // ================= PION CZARNY =================
     private boolean pionCzarny(int ws, int ks, int wc, int kc) {
-        return ks == kc &&
+
+        if (ks == kc &&
                 wc == ws + 1 &&
-                figury[wc][kc].equals("") ||
-                (ks == kc && ws == 1 && wc == ws + 2 &&
-                        figury[ws + 1][ks].equals("") &&
-                        figury[wc][kc].equals(""));
+                figury[wc][kc].equals("")) return true;
+
+        if (Math.abs(kc - ks) == 1 &&
+                wc == ws + 1 &&
+                !figury[wc][kc].equals("") &&
+                czyBiala(figury[wc][kc])) return true;
+
+        if (ws == 1 &&
+                ks == kc &&
+                wc == ws + 2 &&
+                figury[ws + 1][ks].equals("") &&
+                figury[wc][kc].equals("")) return true;
+
+        return false;
     }
 
     // ================= WIEŻA =================
@@ -205,7 +192,7 @@ public class SzachyLogika {
         int w = ws + sw;
         int k = ks + sk;
 
-        while (w != wc && k != kc) {
+        while (w != wc || k != kc) {
             if (!figury[w][k].equals("")) return false;
             w += sw;
             k += sk;
@@ -229,5 +216,44 @@ public class SzachyLogika {
     // ================= KRÓL =================
     private boolean krol(int ws, int ks, int wc, int kc) {
         return Math.abs(wc - ws) <= 1 && Math.abs(kc - ks) <= 1;
+    }
+
+    // ================= POMOCNICZE =================
+    private boolean czyBiala(String f) {
+        return f.equals("♙") || f.equals("♖") || f.equals("♘") ||
+                f.equals("♗") || f.equals("♕") || f.equals("♔");
+    }
+
+    private boolean czyTenSamKolor(String a, String b) {
+        return czyBiala(a) == czyBiala(b);
+    }
+
+    // ================= ATAK BEZ TURY =================
+    private boolean czyRuchBezTury(int ws, int ks, int wc, int kc) {
+
+        String figura = figury[ws][ks];
+
+        switch (figura) {
+
+            case "♟": return pionCzarny(ws, ks, wc, kc);
+            case "♙": return pionBialy(ws, ks, wc, kc);
+
+            case "♜":
+            case "♖": return wieza(ws, ks, wc, kc);
+
+            case "♝":
+            case "♗": return goniec(ws, ks, wc, kc);
+
+            case "♛":
+            case "♕": return hetman(ws, ks, wc, kc);
+
+            case "♞":
+            case "♘": return skoczek(ws, ks, wc, kc);
+
+            case "♚":
+            case "♔": return krol(ws, ks, wc, kc);
+        }
+
+        return false;
     }
 }

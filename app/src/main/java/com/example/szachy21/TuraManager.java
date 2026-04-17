@@ -2,36 +2,32 @@ package com.example.szachy21;
 
 public class TuraManager {
 
-    private boolean bialeTeraz = true;
+    // true = białe, false = czarne
+    private boolean biale = true;
 
-    public boolean czyMoznaRuszyc(String figura) {
-
-        if (figura.equals("")) return false;
-
-        // białe figury
-        boolean biala =
-                figura.equals("♙") ||
-                        figura.equals("♖") ||
-                        figura.equals("♘") ||
-                        figura.equals("♗") ||
-                        figura.equals("♕") ||
-                        figura.equals("♔");
-
-        if (bialeTeraz && !biala) return false;
-        if (!bialeTeraz && biala) return false;
-
-        return true;
-    }
-
+    // zmiana tury
     public void zmienTure() {
-        bialeTeraz = !bialeTeraz;
+        biale = !biale;
     }
 
+    // kto ma teraz ruch
     public boolean czyBialeTeraz() {
-        return bialeTeraz;
+        return biale;
     }
 
+    // ================= NAJWAŻNIEJSZA METODA =================
+    // sprawdza czy figura jest biała
+    public boolean czyBiala(String figura) {
+        return figura.equals("♙") ||
+                figura.equals("♖") ||
+                figura.equals("♘") ||
+                figura.equals("♗") ||
+                figura.equals("♕") ||
+                figura.equals("♔");
+    }
+
+    // (opcjonalnie) tekst tury do debugowania
     public String napisTury() {
-        return bialeTeraz ? "Ruch białych" : "Ruch czarnych";
+        return biale ? "Ruch białych" : "Ruch czarnych";
     }
 }

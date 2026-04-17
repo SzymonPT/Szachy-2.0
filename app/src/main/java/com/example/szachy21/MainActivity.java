@@ -74,11 +74,12 @@ public class MainActivity extends AppCompatActivity {
                 pole.setText(figury[w][k]);
                 pole.setTextSize(28);
                 pole.setGravity(android.view.Gravity.CENTER);
+                pole.setIncludeFontPadding(false);
                 pole.setTextColor(Color.BLACK);
 
                 GridLayout.LayoutParams p = new GridLayout.LayoutParams();
-                p.width = 40;
-                p.height = 40;
+                p.width = 0;
+                p.height = 0;
                 p.rowSpec = GridLayout.spec(w, 1f);
                 p.columnSpec = GridLayout.spec(k, 1f);
 
@@ -89,35 +90,62 @@ public class MainActivity extends AppCompatActivity {
 
                 pole.setOnClickListener(v -> {
 
+                    // ================= WYBÓR FIGURY =================
                     if (wybranyWiersz == -1) {
 
                         if (figury[ww][kk].equals("")) return;
 
+                        boolean biale = tura.czyBialeTeraz();
+                        String figura = figury[ww][kk];
+
+                        // blokada tury
+                        if (biale && !tura.czyBiala(figura)) {
+                            Toast.makeText(this, "Nie twoja tura", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        if (!biale && tura.czyBiala(figura)) {
+                            Toast.makeText(this, "Nie twoja tura", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
                         wybranyWiersz = ww;
                         wybranaKolumna = kk;
-
                         return;
                     }
 
+                    // ================= RUCH =================
                     boolean biale = tura.czyBialeTeraz();
 
-                    if (logika.czyRuchDozwolony(
+                    boolean ruch = logika.czyRuchDozwolony(
                             wybranyWiersz,
                             wybranaKolumna,
                             ww,
                             kk,
-                            biale)) {
+                            biale
+                    );
 
+                    if (ruch) {
+
+                        // wykonanie ruchu
                         figury[ww][kk] = figury[wybranyWiersz][wybranaKolumna];
                         figury[wybranyWiersz][wybranaKolumna] = "";
 
+                        // synchronizacja logiki
+                        logika = new SzachyLogika(figury);
+
+                        // zmiana tury
                         tura.zmienTure();
 
-                        if (logika.czySzach(!biale)) {
+                        boolean nowaTuraBiale = tura.czyBialeTeraz();
+
+                        // SZACH
+                        if (logika.czySzach(nowaTuraBiale)) {
                             Toast.makeText(this, "SZACH!", Toast.LENGTH_SHORT).show();
                         }
 
-                        if (logika.czyMat(!biale)) {
+                        // MAT
+                        if (logika.czyMat(nowaTuraBiale)) {
                             Toast.makeText(this, "MAT! KONIEC GRY", Toast.LENGTH_LONG).show();
                         }
 
